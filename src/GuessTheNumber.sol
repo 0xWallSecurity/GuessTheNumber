@@ -4,15 +4,23 @@ pragma solidity 0.8.18;
 
 /*
 What is this all about?
---> 1. Player pays small fee to enter the game.
-  --> 1.1. 5% of fee is taken as cut by contract, 95% goes into prize pool
---> 2. Player picks a number, contract does too
-  --> 2.1. Number must be in [0,99]
---> 3.1. If player picked the right number: player wins prize pool
---> 3.2. If player picked wrong number: game ends, prize pool goes up
+--> 1. Player pays small fee to enter the game. -- DONE
+  --> 1.1. 5% of fee is taken as cut by contract, 95% goes into prize pool -- DONE
+--> 2. Player picks a number, contract does too -- DONE
+  --> 2.1. Number must be in [0,99] -- DONE
+--> 3.1. If player picked the right number: player wins prize pool -- DONE
+--> 3.2. If player picked wrong number: game ends, prize pool goes up -- DONE
 
---> a) contract belongs to owner, who can withdraw the contracts cut at all times
---> b) players cannot withdraw from the contract. The prize pool is payed out automatically
+--> a) contract belongs to owner, who can withdraw the contracts cut at all times -- DONE
+--> b) players cannot withdraw from the contract. The prize pool is payed out automatically -- DONE
+
+TODO:
+1. Implement real randomness with chainlink VRF (CORRECT_GUESS was for testing only)
+2. Expand the functionality. Some ideas:
+    a) allow more players to play over a specific timeframe. Every player can roll once.
+        Prize pool divided among all players who guessed correctly depending on entrance fee payed (higher payment -> higher payout)
+    b) 
+
 */
 
 /**
@@ -30,12 +38,14 @@ contract GuessTheNumber {
     uint256 private constant MAX_NUMBER = 100; // total of 100 numbers are available => 0 to 99
     uint256 private constant CUT_AMOUNT = 5;
     uint256 private constant PRIZE_POOL_AMOUNT = 95;
+    uint256 private constant CORRECT_GUESS = 10; // for testing
     /** IMMUTABLES */
     uint256 private immutable i_entranceFee; // ~2 USD entrance fee
     address private immutable i_owner;
     /** STORAGE */
     uint256 private s_prizePool;
     uint256 private s_cutPool;
+    address private s_previousWinner;
 
     /** EVENTS */
     event RaffleWon(address indexed player, uint256 indexed prize);
@@ -94,6 +104,7 @@ contract GuessTheNumber {
             (bool success,) = player.call{value: s_prizePool}("You Won, Congratulations!");
             if(!success) revert GuessTheNumber__FailedToSendPrize();
             s_prizePool = 0;
+            s_previousWinner = player;
             emit RaffleWon(player, s_prizePool);
         }
     }
@@ -109,12 +120,11 @@ contract GuessTheNumber {
 
     /**
      * @notice creates a random number between 0 and 99
-     * @dev THIS WAY OF CREATING RANDOM NUMBERS IS PREDICTABLE AND VULNERABLE - DO NOT USE THIS CODE!
      * @dev TODO replace with chainlink VRF
      * @return returns the rolled number
      */
-    function contractGuess() private view returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp))) % MAX_NUMBER;
+    function contractGuess() private pure returns (uint256) {
+        return CORRECT_GUESS;
     }
 
 
@@ -145,5 +155,11 @@ contract GuessTheNumber {
      */
     function getOwner() external view returns (address) {
         return i_owner;
+    }
+    /**
+     * @return returns the winner of the previous raffle
+     */
+    function getRecentWinner() external view returns (address) {
+        return s_previousWinner;
     }
 }

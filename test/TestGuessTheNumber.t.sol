@@ -67,31 +67,30 @@ contract TestGuessTheNumber is Test {
     }
 
     modifier addPlayerAndPlay() {
-        uint256 guess2 = (uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp))) % 99) + 1;
-        if (guess2 == 100) guess2 = 98;
+        uint256 wrongGuess = 50;
         address player2 = address(2);
         vm.deal(player2, START_BALANCE);
         vm.prank(player2);
-        guessTheNumber.playGame{value: 1 ether}(guess2);
+        guessTheNumber.playGame{value: 1 ether}(wrongGuess);
         console.log("Prize Pool: ", guessTheNumber.getPrizePool());
         _;
     }
 
     function testPlayerWins() public addPlayerAndPlay() {
-        uint256 guess = uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp))) % 100;
+        uint256 correctGuess = 10;
         assertEq(guessTheNumber.getPrizePool(), 1 ether * 95 / 100);
         vm.prank(PLAYER);
-        guessTheNumber.playGame{value: 1 ether}(guess);
+        guessTheNumber.playGame{value: 1 ether}(correctGuess);
         assertEq(guessTheNumber.getPrizePool(), 0);
         uint256 playerBalance = 100 ether - 1 ether + 2 * (1 ether * 95 / 100); // we started at 100 eth, played for 1 eth and won 2*0,95eth
         assertEq(address(PLAYER).balance, playerBalance);
     }
 
     function testPlayerLoses() public addPlayerAndPlay() {
-        uint256 guess = (uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp))) % 100) + 1;
+        uint256 wrongGuess = 50;
         assertEq(guessTheNumber.getPrizePool(), 1 ether * 95 / 100);
         vm.prank(PLAYER);
-        guessTheNumber.playGame{value: 1 ether}(guess);
+        guessTheNumber.playGame{value: 1 ether}(wrongGuess);
         assertEq(guessTheNumber.getPrizePool(), 2 * (1 ether * 95 / 100));
         assertEq(address(PLAYER).balance, 99 ether);
     }
