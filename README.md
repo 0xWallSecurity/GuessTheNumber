@@ -8,7 +8,7 @@ Guess The Number is a simple raffle game, where the user pays a small fee to ent
 
 ## Set Up
 ### Prerequesites
-This project needs foundry to be installed. Check via `forge -V`.
+This project needs foundry to be installed to run the tests. Check via `forge -V`.
 For the `make` commands, make needs to be installed. Check via `make -v`.
 Furthermore `make` requires the local anvil node to be running. Open a terminal and run `anvil`.
 
