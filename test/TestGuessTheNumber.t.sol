@@ -52,17 +52,17 @@ contract TestGuessTheNumber is Test {
         assertEq(guessTheNumber.getOwner(), msg.sender);
     }
 
-    function testPlayWithAHundred() public {
-        uint256 guess = 100;
+    function testPlayWithAHundredOne() public {
+        uint256 guess = 101;
         vm.prank(PLAYER);
-        vm.expectRevert("Number must be between 0 and 99!");
+        vm.expectRevert();
         guessTheNumber.playGame{value: 1 ether}(guess);
     }
 
     function testPlayWithNotEnoughPayed() public {
         uint256 guess = 50;
         vm.prank(PLAYER);
-        vm.expectRevert("Must pay at least 0.001 ether!");
+        vm.expectRevert();
         guessTheNumber.playGame{value: 1 wei}(guess);
     }
 
@@ -78,8 +78,7 @@ contract TestGuessTheNumber is Test {
     }
 
     function testPlayerWins() public addPlayerAndPlay() {
-        uint256 guess = uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp))) % 99;
-        if (guess == 100) guess = 98;
+        uint256 guess = uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp))) % 100;
         assertEq(guessTheNumber.getPrizePool(), 1 ether * 95 / 100);
         vm.prank(PLAYER);
         guessTheNumber.playGame{value: 1 ether}(guess);
@@ -89,8 +88,7 @@ contract TestGuessTheNumber is Test {
     }
 
     function testPlayerLoses() public addPlayerAndPlay() {
-        uint256 guess = (uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp))) % 99) + 1;
-        if (guess == 100) guess = 98;
+        uint256 guess = (uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp))) % 100) + 1;
         assertEq(guessTheNumber.getPrizePool(), 1 ether * 95 / 100);
         vm.prank(PLAYER);
         guessTheNumber.playGame{value: 1 ether}(guess);

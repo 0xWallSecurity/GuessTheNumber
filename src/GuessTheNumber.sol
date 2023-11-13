@@ -15,30 +15,51 @@ What is this all about?
 --> b) players cannot withdraw from the contract. The prize pool is payed out automatically
 */
 
-error GuessTheNumber__didntCallStartGame();
-error GuessTheNumber__notOwner();
-
 /**
  * @title GuessTheNumber
  * @author @0xWalle
  * @notice dummy project to get better at solidity
  */
 contract GuessTheNumber {
-    uint256 private constant ENTRANCE_FEE = 1e15; // ~2 USD entrance fee
+
+    /** TYPE DECLARATIONS */
+
+    /** STATE VARS */
+    /** CONSTANTS */
     uint256 private constant MIN_NUMBER = 0;
-    uint256 private constant MAX_NUMBER = 99;
+    uint256 private constant MAX_NUMBER = 100; // total of 100 numbers are available => 0 to 99
     uint256 private constant CUT_AMOUNT = 5;
     uint256 private constant PRIZE_POOL_AMOUNT = 95;
+    /** IMMUTABLES */
+    uint256 private immutable i_entranceFee; // ~2 USD entrance fee
     address private immutable i_owner;
+    /** STORAGE */
     uint256 private s_prizePool;
     uint256 private s_cutPool;
 
+    /** EVENTS */
+    event RaffleWon(address indexed player, uint256 indexed prize);
+
+    /** ERRORS */
+    error GuessTheNumber__DidntCallStartGame();
+    error GuessTheNumber__NotOwner();
+    error GuessTheNumber__GuessNotInRange();
+    error GuessTheNumber__PaymentTooLow();
+    error GuessTheNumber__FailedToSendPrize();
+    error GuessTheNumber__FailedToSendCuts();
+
+    /** MODIFIERS */
     modifier onlyOwner() {
-        if (msg.sender != i_owner) revert GuessTheNumber__notOwner();
+        if (msg.sender != i_owner) revert GuessTheNumber__NotOwner();
         _;
     }
 
-    constructor() {
+    /** FUNCTIONS */
+    /**
+     * @param entranceFee the minimum entrance fee that is required to start a raffle
+     */
+    constructor(uint256 entranceFee) {
+        i_entranceFee = entranceFee;
         i_owner = msg.sender;
     }
 
@@ -46,57 +67,65 @@ contract GuessTheNumber {
      * @notice can only fund the contract by playing!
      */
     receive() external payable {
-        revert GuessTheNumber__didntCallStartGame();
+        revert GuessTheNumber__DidntCallStartGame();
     }
 
     /**
      * @notice can only fund the contract by playing!
      */
     fallback() external payable {
-        revert GuessTheNumber__didntCallStartGame();
+        revert GuessTheNumber__DidntCallStartGame();
     }
 
     /**
      * @notice player enters the game. If he wins -> prize pool goes to player
+     * @param playerGuess the number guessed by the player
      */
-    function playGame(uint256 _guess) external payable {
-        require((_guess >= MIN_NUMBER) && (_guess <= MAX_NUMBER), "Number must be between 0 and 99!");
-        require(msg.value >= ENTRANCE_FEE, "Must pay at least 0.001 ether!");
-        address player = msg.sender;
+    function playGame(uint256 playerGuess) external payable {
+        if ((playerGuess < MIN_NUMBER) || (playerGuess > MAX_NUMBER)) revert GuessTheNumber__GuessNotInRange();
+        if (msg.value < i_entranceFee) revert GuessTheNumber__PaymentTooLow();
+        address payable player = payable(msg.sender);
         uint256 cut = msg.value * CUT_AMOUNT / 100;
         uint256 prize = msg.value * PRIZE_POOL_AMOUNT / 100;
         s_cutPool += cut;
         s_prizePool += prize;
         uint256 guess = contractGuess();
-        if (guess == _guess) {
+        if (guess == playerGuess) {
             (bool success,) = player.call{value: s_prizePool}("You Won, Congratulations!");
-            require(success, "Failed to send contracts prize pool.");
+            if(!success) revert GuessTheNumber__FailedToSendPrize();
             s_prizePool = 0;
+            emit RaffleWon(player, s_prizePool);
         }
     }
 
     /**
-     * @notice owner can withdraw the contracts cuts at any time
-     * @notice revert, if an error occurs sending the funds to the owner
+     * @notice owner can withdraw the contracts cuts at any time; revert, if an error occurs sending the funds to the owner
      */
     function withdraw() public onlyOwner {
         (bool success,) = i_owner.call{value: s_cutPool}("");
-        require(success, "Failed to withdraw contracts cuts.");
+        if (!success) revert GuessTheNumber__FailedToSendCuts();
         s_cutPool = 0;
     }
 
     /**
      * @notice creates a random number between 0 and 99
-     * @notice THIS WAY OF CREATING RANDOM NUMBERS IS PREDICTABLE AND VULNERABLE - DO NOT USE THIS CODE!
      * @dev THIS WAY OF CREATING RANDOM NUMBERS IS PREDICTABLE AND VULNERABLE - DO NOT USE THIS CODE!
+     * @dev TODO replace with chainlink VRF
      * @return returns the rolled number
      */
     function contractGuess() private view returns (uint256) {
         return uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp))) % MAX_NUMBER;
     }
 
+
+    /** GETTERS */
     /**
-     * @notice players can see how big the prize pool currently is
+     * @return minimum entrance fee to start a raffle
+     */
+    function getEntranceFee() external view returns (uint256) {
+        return i_entranceFee;
+    }
+    /**
      * @dev might not want to enable/use this feature
      * @return returns the current prize pool amount
      */
