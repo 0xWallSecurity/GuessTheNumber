@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import {Script} from "forge-std/Script.sol";
+import {Script, console} from "forge-std/Script.sol";
 import {GuessTheNumber} from "../src/GuessTheNumber.sol";
 import {VRFCoordinatorV2Mock} from "../test/mocks/VRFCoordinatorV2Mock.sol";
 
@@ -33,6 +33,8 @@ contract DeployHelper is Script {
         vm.startBroadcast();
         VRFCoordinatorV2Mock vrfCoordinatorV2Mock = new VRFCoordinatorV2Mock(baseFee, gasPrice);
         vm.stopBroadcast();
+
+        console.log("VRFCoordinatorV2Mock address: ", address(vrfCoordinatorV2Mock));
 
         anvilDeployConfig = DeployConfig({
             entranceFee: 1e16,

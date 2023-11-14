@@ -44,6 +44,7 @@ contract GuessTheNumber is VRFConsumerBaseV2 {
     uint32 private constant CALLBACK_GAS_LIMIT = 100000;
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     uint32 private constant NUM_WORDS = 1;
+    uint256 public s_requestId;
 
     /* CONSTANTS */
     uint256 private constant MIN_NUMBER = 0;
@@ -59,11 +60,13 @@ contract GuessTheNumber is VRFConsumerBaseV2 {
     uint256 private s_cutPool;
     address private s_previousWinner;
     uint256 private s_playerNumber;
+    uint256 private s_winningNumber;
     address payable s_player;
 
     /* EVENTS */
     event RaffleWon(address indexed player, uint256 indexed prize);
     event RaffleRandomNumberRequested(uint256 indexed requestId);
+    event ReturnedRandomness(uint256[] indexed randomWords);
 
     /* ERRORS */
     error GuessTheNumber__DidntCallStartGame();
@@ -118,8 +121,8 @@ contract GuessTheNumber is VRFConsumerBaseV2 {
         s_prizePool += prize;
         s_player = payable(msg.sender);
         s_playerNumber = playerNumber;
-        uint256 requestId = i_vrfCoordinator.requestRandomWords(i_keyHash, i_subId, REQUEST_CONFIRMATIONS, CALLBACK_GAS_LIMIT, NUM_WORDS);
-        emit RaffleRandomNumberRequested(requestId);
+        s_requestId = i_vrfCoordinator.requestRandomWords(i_keyHash, i_subId, REQUEST_CONFIRMATIONS, CALLBACK_GAS_LIMIT, NUM_WORDS);
+        emit RaffleRandomNumberRequested(s_requestId);
     }
 
     // /**
@@ -141,8 +144,9 @@ contract GuessTheNumber is VRFConsumerBaseV2 {
     }
 
     function fulfillRandomWords(uint256 /* requestId */, uint256[] memory randomWords) internal override {
-        uint256 winningNumber = randomWords[0] % MAX_NUMBER;
-        if (winningNumber == s_playerNumber) {
+        s_winningNumber = randomWords[0] % MAX_NUMBER;
+        emit ReturnedRandomness(randomWords);
+        if (s_winningNumber == s_playerNumber) {
             (bool success,) = s_player.call{value: s_prizePool}("You Won, Congratulations!");
             if (!success) revert GuessTheNumber__FailedToSendPrize();
             emit RaffleWon(s_player, s_prizePool);
@@ -184,5 +188,11 @@ contract GuessTheNumber is VRFConsumerBaseV2 {
      */
     function getRecentWinner() external view returns (address) {
         return s_previousWinner;
+    }
+    /**
+     * @return returns the winning number of the last raffle
+     */
+    function getWinningNumber() external view returns(uint256) {
+        return s_winningNumber;
     }
 }

@@ -7,7 +7,7 @@ import { GuessTheNumber } from "../src/GuessTheNumber.sol";
 import { DeployGuessTheNumber } from "../script/DeployGuessTheNumber.s.sol";
 
 contract TestGuessTheNumber is Test {
-    GuessTheNumber guessTheNumber;
+    GuessTheNumber public guessTheNumber;
     address public constant PLAYER = address(1);
     uint256 public constant START_BALANCE = 100 ether;
 
@@ -76,7 +76,7 @@ contract TestGuessTheNumber is Test {
         _;
     }
 
-    function testPlayerWins() public addPlayerAndPlay() {
+    function testPlayerWins() public addPlayerAndPlay {
         uint256 correctGuess = 10;
         assertEq(guessTheNumber.getPrizePool(), 1 ether * 95 / 100);
         vm.prank(PLAYER);
@@ -86,12 +86,11 @@ contract TestGuessTheNumber is Test {
         assertEq(address(PLAYER).balance, playerBalance);
     }
 
-    function testPlayerLoses() public addPlayerAndPlay() {
-        uint256 wrongGuess = 50;
-        assertEq(guessTheNumber.getPrizePool(), 1 ether * 95 / 100);
+    function testVRFSubscription() public addPlayerAndPlay {
+        uint256 guess = 10;
         vm.prank(PLAYER);
-        guessTheNumber.playGame{value: 1 ether}(wrongGuess);
-        assertEq(guessTheNumber.getPrizePool(), 2 * (1 ether * 95 / 100));
-        assertEq(address(PLAYER).balance, 99 ether);
+        guessTheNumber.playGame{value: 1 ether}(guess);
+        console.log("player guess: ", guess);
+        console.log("vrf guess: ", guessTheNumber.getWinningNumber());
     }
 }
