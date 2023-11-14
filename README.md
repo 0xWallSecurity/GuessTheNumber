@@ -15,3 +15,15 @@ Furthermore `make` requires the local anvil node to be running. Open a terminal 
 ### make
 Run `make runScript` to deploy the contract to your local anvil node. You can then interact with the contract via forge cast or writing your own scripts.
 Run `make runTest` or `make runTestVerbose` to run tests. 
+
+## TODO
+1. expand testing:
+    | File                              | % Lines        | % Statements   | % Branches    | % Funcs       |
+    |-----------------------------------|----------------|----------------|---------------|---------------|
+    | script/DeployGuessTheNumber.s.sol | 0.00% (0/13)   | 0.00% (0/19)   | 0.00% (0/2)   | 0.00% (0/1)   |
+    | script/DeployHelper.s.sol         | 0.00% (0/7)    | 0.00% (0/8)    | 100.00% (0/0) | 0.00% (0/1)   |
+    | script/DeployVRFHelper.s.sol      | 0.00% (0/18)   | 0.00% (0/25)   | 100.00% (0/0) | 0.00% (0/7)   |
+    | src/GuessTheNumber.sol            | 82.14% (23/28) | 78.95% (30/38) | 60.00% (6/10) | 80.00% (8/10) |
+    | Total                             | 34.85% (23/66) | 33.33% (30/90) | 50.00% (6/12) | 42.11% (8/19) |
+2. finish documentation for helper contracts + tests
+3. extend the project

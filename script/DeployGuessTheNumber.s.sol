@@ -9,7 +9,7 @@ import {CreateSubscription, FundSubscription, AddConsumer} from "./DeployVRFHelp
 
 contract DeployGuessTheNumber is Script {
     uint256 private constant ENTRANCE_FEE = 1e15;
-    function run() external returns (GuessTheNumber) {
+    function run() external returns (GuessTheNumber, DeployHelper) {
         DeployHelper deployHelper = new DeployHelper();
         AddConsumer addConsumer = new AddConsumer();
         (uint256 entranceFee, uint64 subId, address vrfCoordinatorV2, bytes32 keyHash, uint256 privateKey) = deployHelper.deployConfig();
@@ -27,6 +27,6 @@ contract DeployGuessTheNumber is Script {
 
         addConsumer.addConsumer(address(guessTheNumber), subId, vrfCoordinatorV2, privateKey);
 
-        return guessTheNumber;
+        return (guessTheNumber, deployHelper);
     }
 }

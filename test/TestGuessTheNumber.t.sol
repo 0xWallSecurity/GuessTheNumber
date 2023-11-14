@@ -5,16 +5,24 @@ pragma solidity ^0.8.18;
 import { Test, console } from "forge-std/Test.sol";
 import { GuessTheNumber } from "../src/GuessTheNumber.sol";
 import { DeployGuessTheNumber } from "../script/DeployGuessTheNumber.s.sol";
+import {Vm} from "forge-std/Vm.sol";
+import {VRFCoordinatorV2Mock} from "./mocks/VRFCoordinatorV2Mock.sol";
+import {DeployHelper} from "../script/DeployHelper.s.sol";
 
 contract TestGuessTheNumber is Test {
     GuessTheNumber public guessTheNumber;
+    DeployHelper public deployHelper;
     address public constant PLAYER = address(1);
     uint256 public constant START_BALANCE = 100 ether;
 
+    address vrfCoordinatorV2;
+
     function setUp() external {
         DeployGuessTheNumber deploy = new DeployGuessTheNumber();
-        guessTheNumber = deploy.run();
+        (guessTheNumber, deployHelper) = deploy.run();
+        (, , vrfCoordinatorV2, ,) = deployHelper.deployConfig();
         vm.deal(PLAYER, START_BALANCE);
+        vm.deal(address(guessTheNumber), START_BALANCE);
     }
 
     function testDirectlyFundContract() public {
@@ -76,21 +84,27 @@ contract TestGuessTheNumber is Test {
         _;
     }
 
-    function testPlayerWins() public addPlayerAndPlay {
-        uint256 correctGuess = 10;
-        assertEq(guessTheNumber.getPrizePool(), 1 ether * 95 / 100);
+    function testPlayerWins() public {
+        uint256 playerGuess = 61;
+        
         vm.prank(PLAYER);
-        guessTheNumber.playGame{value: 1 ether}(correctGuess);
-        assertEq(guessTheNumber.getPrizePool(), 0);
-        uint256 playerBalance = 100 ether - 1 ether + 2 * (1 ether * 95 / 100); // we started at 100 eth, played for 1 eth and won 2*0,95eth
-        assertEq(address(PLAYER).balance, playerBalance);
-    }
+        vm.recordLogs();        
+        guessTheNumber.playGame{value: 1 ether}(playerGuess);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        bytes32 requestId = logs[1].topics[1];
+        uint256 startBalance = PLAYER.balance;
+        uint256 startPrizePool = guessTheNumber.getPrizePool();
+        VRFCoordinatorV2Mock(vrfCoordinatorV2).fulfillRandomWords(uint256(requestId), address(guessTheNumber));
 
-    function testVRFSubscription() public addPlayerAndPlay {
-        uint256 guess = 10;
-        vm.prank(PLAYER);
-        guessTheNumber.playGame{value: 1 ether}(guess);
-        console.log("player guess: ", guess);
-        console.log("vrf guess: ", guessTheNumber.getWinningNumber());
+        address recentWinner = guessTheNumber.getRecentWinner();
+        uint256 winningNumber = guessTheNumber.getWinningNumber();
+        uint256 endBalance = PLAYER.balance;
+        uint256 endPrizePool = guessTheNumber.getPrizePool();
+
+        console.log("winning number: ", guessTheNumber.getWinningNumber());
+        assertEq(recentWinner, PLAYER);
+        assertEq(winningNumber, playerGuess);
+        assertEq(endBalance, startBalance + startPrizePool);
+        assertEq(endPrizePool, 0);
     }
 }
