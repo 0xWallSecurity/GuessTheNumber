@@ -23,34 +23,49 @@ TODO:
 
 */
 
+import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+
+
 /**
  * @title GuessTheNumber
- * @author @0xWalle
+ * @author @0xWalle inspired by Patrick Collins
  * @notice dummy project to get better at solidity
  */
-contract GuessTheNumber {
+contract GuessTheNumber is VRFConsumerBaseV2 {
 
-    /** TYPE DECLARATIONS */
+    /* TYPE DECLARATIONS */
 
-    /** STATE VARS */
-    /** CONSTANTS */
+    /* STATE VARS */
+    /* VRF VARS */
+    VRFCoordinatorV2Interface immutable i_vrfCoordinator;
+    uint64 private immutable i_subId;
+    bytes32 private immutable i_keyHash;
+    uint32 private constant CALLBACK_GAS_LIMIT = 100000;
+    uint16 private constant REQUEST_CONFIRMATIONS = 3;
+    uint32 private constant NUM_WORDS = 1;
+
+    /* CONSTANTS */
     uint256 private constant MIN_NUMBER = 0;
     uint256 private constant MAX_NUMBER = 100; // total of 100 numbers are available => 0 to 99
     uint256 private constant CUT_AMOUNT = 5;
     uint256 private constant PRIZE_POOL_AMOUNT = 95;
     uint256 private constant CORRECT_GUESS = 10; // for testing
-    /** IMMUTABLES */
+    /* IMMUTABLES */
     uint256 private immutable i_entranceFee; // ~2 USD entrance fee
     address private immutable i_owner;
-    /** STORAGE */
+    /* STORAGE */
     uint256 private s_prizePool;
     uint256 private s_cutPool;
     address private s_previousWinner;
+    uint256 private s_playerNumber;
+    address payable s_player;
 
-    /** EVENTS */
+    /* EVENTS */
     event RaffleWon(address indexed player, uint256 indexed prize);
+    event RaffleRandomNumberRequested(uint256 indexed requestId);
 
-    /** ERRORS */
+    /* ERRORS */
     error GuessTheNumber__DidntCallStartGame();
     error GuessTheNumber__NotOwner();
     error GuessTheNumber__GuessNotInRange();
@@ -58,18 +73,21 @@ contract GuessTheNumber {
     error GuessTheNumber__FailedToSendPrize();
     error GuessTheNumber__FailedToSendCuts();
 
-    /** MODIFIERS */
+    /* MODIFIERS */
     modifier onlyOwner() {
         if (msg.sender != i_owner) revert GuessTheNumber__NotOwner();
         _;
     }
 
-    /** FUNCTIONS */
+    /* FUNCTIONS */
     /**
      * @param entranceFee the minimum entrance fee that is required to start a raffle
      */
-    constructor(uint256 entranceFee) {
+    constructor(uint256 entranceFee, uint64 subId, address vrfCoordinator, bytes32 keyHash) VRFConsumerBaseV2(vrfCoordinator) {
         i_entranceFee = entranceFee;
+        i_subId = subId;
+        i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinator);
+        i_keyHash = keyHash;
         i_owner = msg.sender;
     }
 
@@ -89,25 +107,29 @@ contract GuessTheNumber {
 
     /**
      * @notice player enters the game. If he wins -> prize pool goes to player
-     * @param playerGuess the number guessed by the player
+     * @param playerNumber the number guessed by the player
      */
-    function playGame(uint256 playerGuess) external payable {
-        if ((playerGuess < MIN_NUMBER) || (playerGuess > MAX_NUMBER)) revert GuessTheNumber__GuessNotInRange();
+    function playGame(uint256 playerNumber) external payable {
+        if ((playerNumber < MIN_NUMBER) || (playerNumber > MAX_NUMBER)) revert GuessTheNumber__GuessNotInRange();
         if (msg.value < i_entranceFee) revert GuessTheNumber__PaymentTooLow();
-        address payable player = payable(msg.sender);
         uint256 cut = msg.value * CUT_AMOUNT / 100;
         uint256 prize = msg.value * PRIZE_POOL_AMOUNT / 100;
         s_cutPool += cut;
         s_prizePool += prize;
-        uint256 guess = contractGuess();
-        if (guess == playerGuess) {
-            (bool success,) = player.call{value: s_prizePool}("You Won, Congratulations!");
-            if(!success) revert GuessTheNumber__FailedToSendPrize();
-            s_prizePool = 0;
-            s_previousWinner = player;
-            emit RaffleWon(player, s_prizePool);
-        }
+        s_player = payable(msg.sender);
+        s_playerNumber = playerNumber;
+        uint256 requestId = i_vrfCoordinator.requestRandomWords(i_keyHash, i_subId, REQUEST_CONFIRMATIONS, CALLBACK_GAS_LIMIT, NUM_WORDS);
+        emit RaffleRandomNumberRequested(requestId);
     }
+
+    // /**
+    //  * @notice creates a random number between 0 and 99
+    //  * @dev TODO replace with chainlink VRF
+    //  */
+    // function requestRandomWords() external onlyOwner {
+    //     uint256 requestId = i_vrfCoordinator.requestRandomWords(i_keyHash, i_subId, REQUEST_CONFIRMATIONS, CALLBACK_GAS_LIMIT, NUM_WORDS);
+    //     emit RaffleRandomNumberRequested(requestId);
+    // }
 
     /**
      * @notice owner can withdraw the contracts cuts at any time; revert, if an error occurs sending the funds to the owner
@@ -118,17 +140,18 @@ contract GuessTheNumber {
         s_cutPool = 0;
     }
 
-    /**
-     * @notice creates a random number between 0 and 99
-     * @dev TODO replace with chainlink VRF
-     * @return returns the rolled number
-     */
-    function contractGuess() private pure returns (uint256) {
-        return CORRECT_GUESS;
+    function fulfillRandomWords(uint256 /* requestId */, uint256[] memory randomWords) internal override {
+        uint256 winningNumber = randomWords[0] % MAX_NUMBER;
+        if (winningNumber == s_playerNumber) {
+            (bool success,) = s_player.call{value: s_prizePool}("You Won, Congratulations!");
+            if (!success) revert GuessTheNumber__FailedToSendPrize();
+            emit RaffleWon(s_player, s_prizePool);
+            s_prizePool = 0;
+            s_previousWinner = s_player;
+        }
     }
 
-
-    /** GETTERS */
+    /* GETTERS */
     /**
      * @return minimum entrance fee to start a raffle
      */
