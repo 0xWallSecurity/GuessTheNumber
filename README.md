@@ -6,6 +6,8 @@
 ## About
 Guess The Number is a simple raffle game, where the user pays a small fee to enter a game and picks a number. If that number is equivalent to the contracts number picked, the user wins the contracts prize pool. The contract takes a 5% cut as a fee of each game, which will not be payed out.
 
+This project is based on the [Cyfrin Foundry Solidity Course](https://github.com/Cyfrin/foundry-full-course-f23).
+
 ## Set Up
 ### Prerequesites
 This project needs foundry to be installed to run the tests. Check via `forge -V`.
