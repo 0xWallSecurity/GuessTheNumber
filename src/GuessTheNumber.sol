@@ -15,7 +15,7 @@ What is this all about?
 --> b) players cannot withdraw from the contract. The prize pool is payed out automatically -- DONE
 
 TODO:
-1. Implement real randomness with chainlink VRF (CORRECT_GUESS was for testing only)
+1. Implement real randomness with chainlink VRF (CORRECT_GUESS was for testing only) -- DONE
 2. Expand the functionality. Some ideas:
     a) allow more players to play over a specific timeframe. Every player can roll once.
         Prize pool divided among all players who guessed correctly depending on entrance fee payed (higher payment -> higher payout)
@@ -123,17 +123,8 @@ contract GuessTheNumber is VRFConsumerBaseV2 {
         s_player = payable(msg.sender);
         s_playerNumber = playerNumber;
         s_requestId = i_vrfCoordinator.requestRandomWords(i_keyHash, i_subId, REQUEST_CONFIRMATIONS, CALLBACK_GAS_LIMIT, NUM_WORDS);
-        emit RaffleRandomNumberRequested(s_requestId);
+        emit RaffleRandomNumberRequested(s_requestId); // TODO this is not needed. remove and fix test to check the emit from requestRandomWords
     }
-
-    // /**
-    //  * @notice creates a random number between 0 and 99
-    //  * @dev TODO replace with chainlink VRF
-    //  */
-    // function requestRandomWords() external onlyOwner {
-    //     uint256 requestId = i_vrfCoordinator.requestRandomWords(i_keyHash, i_subId, REQUEST_CONFIRMATIONS, CALLBACK_GAS_LIMIT, NUM_WORDS);
-    //     emit RaffleRandomNumberRequested(requestId);
-    // }
 
     /**
      * @notice owner can withdraw the contracts cuts at any time; revert, if an error occurs sending the funds to the owner
