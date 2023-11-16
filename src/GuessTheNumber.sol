@@ -69,6 +69,7 @@ contract GuessTheNumber is VRFConsumerBaseV2 {
     event ReturnedRandomness(uint256[] indexed randomWords);
 
     /* ERRORS */
+    // TODO MAKE THESE BETTER WITH PARMS
     error GuessTheNumber__DidntCallStartGame();
     error GuessTheNumber__NotOwner();
     error GuessTheNumber__GuessNotInRange();
