@@ -27,7 +27,7 @@ Run `make runTest` or `make runTestVerbose` to run tests.
     | script/DeployVRFHelper.s.sol      | 0.00% (0/18)   | 0.00% (0/25)   | 100.00% (0/0) | 0.00% (0/7)   |
     | src/GuessTheNumber.sol            | 82.14% (23/28) | 78.95% (30/38) | 60.00% (6/10) | 80.00% (8/10) |
     | Total                             | 34.85% (23/66) | 33.33% (30/90) | 50.00% (6/12) | 42.11% (8/19) |
-2. fix TODO test
+2. ~fix TODO test~
 3. finish documentation for helper contracts + tests
 4. better errors with params
 5. extend the project
