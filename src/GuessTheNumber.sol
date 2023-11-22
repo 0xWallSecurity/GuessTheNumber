@@ -123,7 +123,6 @@ contract GuessTheNumber is VRFConsumerBaseV2 {
         s_player = payable(msg.sender);
         s_playerNumber = playerNumber;
         s_requestId = i_vrfCoordinator.requestRandomWords(i_keyHash, i_subId, REQUEST_CONFIRMATIONS, CALLBACK_GAS_LIMIT, NUM_WORDS);
-        emit RaffleRandomNumberRequested(s_requestId); // @todo this is not needed. remove and fix test to check the emit from requestRandomWords
     }
 
     /**

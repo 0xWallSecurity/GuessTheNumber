@@ -91,7 +91,7 @@ contract TestGuessTheNumber is Test {
         vm.recordLogs();        
         guessTheNumber.playGame{value: 1 ether}(playerGuess);
         Vm.Log[] memory logs = vm.getRecordedLogs();
-        bytes32 requestId = logs[1].topics[1]; // adjust to requestRandomWords emit -> logs[0].topics[2] (probably -> need to test) 
+        bytes32 requestId = logs[0].topics[2]; // adjust to requestRandomWords emit -> logs[0].topics[2] (probably -> need to test) 
         uint256 startBalance = PLAYER.balance;
         uint256 startPrizePool = guessTheNumber.getPrizePool();
         VRFCoordinatorV2Mock(vrfCoordinatorV2).fulfillRandomWords(uint256(requestId), address(guessTheNumber));
