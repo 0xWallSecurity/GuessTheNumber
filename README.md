@@ -20,14 +20,19 @@ Run `make runTest` or `make runTestVerbose` to run tests.
 
 ## TODO
 1. expand testing:
-    | File                              | % Lines        | % Statements   | % Branches    | % Funcs        |
-    |-----------------------------------|----------------|----------------|---------------|----------------|
-    | script/DeployGuessTheNumber.s.sol | 46.15% (6/13)  | 52.63% (10/19) | 0.00% (0/2)   | 100.00% (1/1)  |
-    | script/DeployHelper.s.sol         | 0.00% (0/7)    | 0.00% (0/8)    | 100.00% (0/0) | 0.00% (0/1)    |
-    | script/DeployVRFHelper.s.sol      | 5.56% (1/18)   | 4.00% (1/25)   | 100.00% (0/0) | 14.29% (1/7)   |
-    | src/GuessTheNumber.sol            | 81.48% (22/27) | 78.38% (29/37) | 60.00% (6/10) | 80.00% (8/10)  |
-    | Total                             | 44.62% (29/65) | 44.94% (40/89) | 50.00% (6/12) | 52.63% (10/19) |
+    | File                              | % Lines         | % Statements    | % Branches    | % Funcs        |
+    |-----------------------------------|-----------------|-----------------|---------------|----------------|
+    | script/DeployGuessTheNumber.s.sol | 100.00% (13/13) | 100.00% (19/19) | 50.00% (1/2)  | 100.00% (1/1)  |
+    | script/DeployHelper.s.sol         | 0.00% (0/7)     | 0.00% (0/8)     | 100.00% (0/0) | 0.00% (0/1)    |
+    | script/DeployVRFHelper.s.sol      | 80.00% (16/20)  | 77.78% (21/27)  | 100.00% (0/0) | 75.00% (6/8)   |
+    | src/GuessTheNumber.sol            | 81.48% (22/27)  | 78.38% (29/37)  | 60.00% (6/10) | 80.00% (8/10)  |
+    | Total                             | 76.12% (51/67)  | 75.82% (69/91)  | 58.33% (7/12) | 75.00% (15/20) |
 2. ~fix TODO test~
 3. finish documentation for helper contracts + tests
-4. better errors with params
-5. extend the project
+  1. ~DeployGuessTheNumber.s.sol~
+  2. DeployHelper.s.sol
+  3. DeployVRFHelper.s.sol
+4. extend the project
+  1. save all winners to a list
+  2. maybe save all players too?
+5. better errors with params

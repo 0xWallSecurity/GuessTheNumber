@@ -13,6 +13,9 @@ import {DeployHelper} from "./DeployHelper.s.sol";
  * @notice creates a subscription to chainlink VRF and returns its subId
  */
 contract CreateSubscription is Script {
+
+    address public vrfCoordinatorV2;
+
     /**
      * @notice auto runs on contract creation
      * @return subId via createSubscriptionWithConfig
@@ -23,13 +26,14 @@ contract CreateSubscription is Script {
 
     /**
      * @notice creates the subscription to chainlink VRF
-     * @param vrfCoordinatorV2 the address of the vrfCoordinator
+     * @param _vrfCoordinatorV2 the address of the vrfCoordinator
      * @param privateKey the anvil deploy private key (index 0)
      * @return subId
      */
-    function createSubscription(address vrfCoordinatorV2, uint256 privateKey) public returns (uint64) {
+    function createSubscription(address _vrfCoordinatorV2, uint256 privateKey) public returns (uint64) {
+        vrfCoordinatorV2 = _vrfCoordinatorV2;
         vm.startBroadcast(privateKey);
-        uint64 subId = VRFCoordinatorV2Mock(vrfCoordinatorV2).createSubscription();
+        uint64 subId = VRFCoordinatorV2Mock(_vrfCoordinatorV2).createSubscription();
         vm.stopBroadcast();
         return subId;
     }
@@ -40,8 +44,15 @@ contract CreateSubscription is Script {
      */
     function createSubscriptionWithConfig() private returns (uint64) {
         DeployHelper deployHelper = new DeployHelper();
-        ( , , address vrfCoordinatorV2, , uint256 privateKey) = deployHelper.deployConfig();
-        return createSubscription(vrfCoordinatorV2, privateKey);
+        ( , , address _vrfCoordinatorV2, , uint256 privateKey) = deployHelper.deployConfig();
+        return createSubscription(_vrfCoordinatorV2, privateKey);
+    }
+
+    /**
+     * @return address of the VRFCoordinatorMock-address
+     */
+    function getVRFCoordinatorV2Address() public view returns (address) {
+        return vrfCoordinatorV2;
     }
 }
 

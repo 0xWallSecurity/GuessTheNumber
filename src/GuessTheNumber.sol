@@ -19,10 +19,12 @@ What is this all about?
 2. Expand the functionality. Some ideas:
     a) allow more players to play over a specific timeframe. Every player can roll once.
         Prize pool divided among all players who guessed correctly depending on entrance fee payed (higher payment -> higher payout)
+
     b) 
 
 */
 
+/* IMPORTS */
 import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 
