@@ -29,10 +29,10 @@ Run `make runTest` or `make runTestVerbose` to run tests.
     | Total                             | 76.12% (51/67)  | 75.82% (69/91)  | 58.33% (7/12) | 75.00% (15/20) |
 2. ~fix TODO test~
 3. finish documentation for helper contracts + tests
-  1. ~DeployGuessTheNumber.s.sol~
-  2. DeployHelper.s.sol
-  3. DeployVRFHelper.s.sol
+    1. ~DeployGuessTheNumber.s.sol~
+    2. DeployHelper.s.sol
+    3. DeployVRFHelper.s.sol
 4. extend the project
-  1. save all winners to a list
-  2. maybe save all players too?
+    1. save all winners to a list
+    2. maybe save all players too?
 5. better errors with params
